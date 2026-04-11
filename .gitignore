@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# data pipeline — scraped/derived data files (large, regenerable)
+data/*.json
+data/*.txt
+data/*.ts
+!data/.gitkeep
