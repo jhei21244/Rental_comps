@@ -1,8 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import PropertyForm from '@/app/components/PropertyForm';
 import { SUBURBS } from '@/lib/suburbs';
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: 'Suburb Data — FairRent',
+  description:
+    'Rental market data for Melbourne suburbs: 2BR medians, market pressure, negotiation success rates, and quarter-on-quarter trends.',
+};
+
+export default function SuburbsPage() {
   return (
     <>
       {/* Nav */}
@@ -20,13 +26,15 @@ export default function Home() {
           zIndex: 100,
         }}
       >
-        <div
+        <Link
+          href="/"
           style={{
             fontFamily: 'var(--font-serif), Georgia, serif',
             fontSize: 20,
             fontWeight: 700,
             color: 'var(--bark)',
             letterSpacing: '-0.5px',
+            textDecoration: 'none',
           }}
         >
           FairRent
@@ -44,17 +52,12 @@ export default function Home() {
           >
             AU
           </sup>
-        </div>
+        </Link>
         <ul style={{ display: 'flex', gap: 28, listStyle: 'none', margin: 0, padding: 0 }}>
           <li>
-            <a href="#suburbs" style={{ fontSize: 13, color: 'var(--text2)', textDecoration: 'none' }}>
-              Suburb data
-            </a>
-          </li>
-          <li>
-            <a href="#how" style={{ fontSize: 13, color: 'var(--text2)', textDecoration: 'none' }}>
-              How it works
-            </a>
+            <Link href="/" style={{ fontSize: 13, color: 'var(--text2)', textDecoration: 'none' }}>
+              ← Check my rent
+            </Link>
           </li>
           <li>
             <Link href="/data" style={{ fontSize: 13, color: 'var(--text2)', textDecoration: 'none' }}>
@@ -64,88 +67,7 @@ export default function Home() {
         </ul>
       </nav>
 
-      {/* Hero */}
-      <div
-        style={{
-          padding: '80px 48px 0',
-          maxWidth: 1100,
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 64,
-          alignItems: 'start',
-        }}
-      >
-        {/* Left */}
-        <div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '2.5px',
-              textTransform: 'uppercase',
-              color: 'var(--terra)',
-              marginBottom: 16,
-            }}
-          >
-            RENTAL INTELLIGENCE
-          </div>
-          <h1
-            style={{
-              fontFamily: 'var(--font-serif), Georgia, serif',
-              fontSize: 'clamp(36px, 4.5vw, 58px)',
-              lineHeight: 1.06,
-              letterSpacing: '-1px',
-              color: 'var(--bark)',
-              marginBottom: 20,
-            }}
-          >
-            Is $X/week fair for{' '}
-            <em style={{ color: 'var(--terra)', fontStyle: 'italic' }}>your</em> specific property?
-          </h1>
-          <p
-            style={{
-              fontSize: 16,
-              color: 'var(--text2)',
-              lineHeight: 1.75,
-              marginBottom: 36,
-              maxWidth: 440,
-              fontWeight: 300,
-            }}
-          >
-            Domain gives you a suburb median. That's not an answer. Your place has parking, no AC,
-            it's a 12-minute walk to the station. Every one of those details matters. FairRent prices
-            them.
-          </p>
-          <div style={{ display: 'flex', gap: 32, marginBottom: 40, flexWrap: 'wrap' }}>
-            {[
-              { num: '12,400+', label: 'properties assessed' },
-              { num: '47', label: 'suburbs calibrated' },
-              { num: '±$31/wk', label: 'average accuracy' },
-            ].map(({ num, label }) => (
-              <div key={label} style={{ borderLeft: '2px solid var(--terra)', paddingLeft: 14 }}>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-serif), Georgia, serif',
-                    fontSize: 28,
-                    color: 'var(--bark)',
-                    lineHeight: 1,
-                  }}
-                >
-                  {num}
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right — form */}
-        <PropertyForm />
-      </div>
-
-      {/* Suburb table */}
-      <div id="suburbs" style={{ maxWidth: 1100, margin: '80px auto 0', padding: '0 48px' }}>
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '56px 48px 80px' }}>
         <div
           style={{
             fontSize: 11,
@@ -158,35 +80,82 @@ export default function Home() {
         >
           SUBURB DATA
         </div>
-        <h2
+        <h1
           style={{
             fontFamily: 'var(--font-serif), Georgia, serif',
-            fontSize: 'clamp(26px, 3vw, 36px)',
+            fontSize: 'clamp(30px, 4vw, 46px)',
             color: 'var(--bark)',
             marginBottom: 8,
-            letterSpacing: '-0.5px',
+            letterSpacing: '-1px',
+            lineHeight: 1.1,
           }}
         >
-          Melbourne rental market snapshot
-        </h2>
+          Melbourne rental market data
+        </h1>
         <p
           style={{
-            fontSize: 14,
+            fontSize: 15,
             color: 'var(--text2)',
-            marginBottom: 32,
-            lineHeight: 1.7,
-            maxWidth: 600,
+            marginBottom: 40,
+            lineHeight: 1.75,
+            maxWidth: 620,
             fontWeight: 300,
           }}
         >
-          Live data from signed leases across Melbourne&apos;s inner suburbs. Updated quarterly.{' '}
-          <Link
-            href="/suburbs"
-            style={{ color: 'var(--terra)', textDecoration: 'none', fontWeight: 700 }}
-          >
-            View all suburbs →
-          </Link>
+          Aggregated from self-reported signed leases across Melbourne&apos;s inner suburbs. All medians
+          are for 2-bedroom properties. Negotiation success rate reflects the proportion of renters who
+          successfully reduced the asking rent before signing.
         </p>
+
+        {/* Stats bar */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 32,
+            marginBottom: 48,
+            padding: '20px 24px',
+            background: 'white',
+            border: '1px solid var(--cream3)',
+            borderRadius: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          {[
+            { num: SUBURBS.length.toString(), label: 'suburbs tracked' },
+            {
+              num: SUBURBS.reduce((s, x) => s + x.n, 0).toLocaleString(),
+              label: 'leases in dataset',
+            },
+            {
+              num:
+                '$' +
+                Math.round(SUBURBS.reduce((s, x) => s + x.negoAmtPw, 0) / SUBURBS.length) +
+                '/wk',
+              label: 'average negotiation saving',
+            },
+            {
+              num:
+                Math.round(SUBURBS.reduce((s, x) => s + x.negoPercent, 0) / SUBURBS.length) + '%',
+              label: 'renters who negotiate',
+            },
+          ].map(({ num, label }) => (
+            <div key={label} style={{ borderLeft: '2px solid var(--terra)', paddingLeft: 14 }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif), Georgia, serif',
+                  fontSize: 24,
+                  color: 'var(--bark)',
+                  lineHeight: 1,
+                }}
+              >
+                {num}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Full table */}
         <div style={{ overflowX: 'auto' }}>
           <table className="suburb-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -194,10 +163,13 @@ export default function Home() {
                 {[
                   'Suburb',
                   '2BR median',
+                  '10th pct',
+                  '90th pct',
                   'Market pressure',
                   'QoQ trend',
                   'Nego success %',
-                  'Reports',
+                  'Avg saving',
+                  'Records',
                   '',
                 ].map((h) => (
                   <th
@@ -220,7 +192,7 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {SUBURBS.map((suburb) => (
+              {SUBURBS.sort((a, b) => b.median2br - a.median2br).map((suburb) => (
                 <tr key={suburb.slug} style={{ borderBottom: '1px solid var(--cream2)' }}>
                   <td
                     style={{
@@ -228,6 +200,7 @@ export default function Home() {
                       fontSize: 14,
                       fontWeight: 700,
                       color: 'var(--bark)',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {suburb.name}
@@ -243,8 +216,16 @@ export default function Home() {
                   >
                     ${suburb.median2br}/wk
                   </td>
+                  <td style={{ padding: '13px 14px', fontSize: 13, color: 'var(--text3)' }}>
+                    ${suburb.p10}
+                  </td>
+                  <td style={{ padding: '13px 14px', fontSize: 13, color: 'var(--text3)' }}>
+                    ${suburb.p90}
+                  </td>
                   <td style={{ padding: '13px 14px' }}>
-                    <span style={{ fontSize: 12, color: 'var(--text2)' }}>{suburb.pressureLevel}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text2)' }}>
+                      {suburb.pressureLevel}
+                    </span>
                     <span
                       style={{
                         display: 'inline-flex',
@@ -297,6 +278,16 @@ export default function Home() {
                   <td style={{ padding: '13px 14px', fontSize: 14, color: 'var(--text2)' }}>
                     {suburb.negoPercent}%
                   </td>
+                  <td
+                    style={{
+                      padding: '13px 14px',
+                      fontSize: 13,
+                      color: 'var(--sage)',
+                      fontWeight: 700,
+                    }}
+                  >
+                    −${suburb.negoAmtPw}/wk
+                  </td>
                   <td style={{ padding: '13px 14px', fontSize: 12, color: 'var(--text3)' }}>
                     {suburb.n.toLocaleString()}
                   </td>
@@ -318,110 +309,25 @@ export default function Home() {
             </tbody>
           </table>
         </div>
-      </div>
 
-      {/* How it works */}
-      <div id="how" style={{ maxWidth: 1100, margin: '72px auto 0', padding: '0 48px' }}>
         <div
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '2.5px',
-            textTransform: 'uppercase',
-            color: 'var(--terra)',
-            marginBottom: 14,
-          }}
-        >
-          HOW IT WORKS
-        </div>
-        <h2
-          style={{
-            fontFamily: 'var(--font-serif), Georgia, serif',
-            fontSize: 'clamp(26px, 3vw, 36px)',
-            color: 'var(--bark)',
-            marginBottom: 8,
-            letterSpacing: '-0.5px',
-          }}
-        >
-          Three steps to an answer
-        </h2>
-        <p
-          style={{
-            fontSize: 14,
-            color: 'var(--text2)',
-            marginBottom: 32,
+            marginTop: 32,
+            padding: '16px 20px',
+            background: 'var(--cream2)',
+            borderRadius: 10,
+            fontSize: 12,
+            color: 'var(--text3)',
             lineHeight: 1.7,
-            maxWidth: 600,
-            fontWeight: 300,
           }}
         >
-          No guesswork, no suburb-level averages. Precision pricing for your specific property.
-        </p>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
-            paddingBottom: 80,
-          }}
-        >
-          {[
-            {
-              num: '01',
-              title: 'Enter your suburb and rent',
-              body: 'Describe your property — suburb, size, and the weekly rent you agreed on. Takes about 90 seconds.',
-            },
-            {
-              num: '02',
-              title: 'Get a precise answer',
-              body: 'Our hedonic model prices each attribute individually. You get a dollar verdict showing exactly where your rent sits and why.',
-            },
-            {
-              num: '03',
-              title: 'Report your outcome',
-              body: 'Did you negotiate? Did the rent increase? Share your outcome anonymously and help the next renter in your suburb.',
-            },
-          ].map(({ num, title, body }) => (
-            <div
-              key={num}
-              style={{
-                background: 'white',
-                border: '1px solid var(--cream3)',
-                borderRadius: 16,
-                padding: 26,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: 'var(--font-serif), Georgia, serif',
-                  fontSize: 32,
-                  fontWeight: 900,
-                  color: 'var(--cream3)',
-                  marginBottom: 12,
-                  lineHeight: 1,
-                }}
-              >
-                {num}
-              </div>
-              <h3
-                style={{
-                  fontFamily: 'var(--font-serif), Georgia, serif',
-                  fontSize: 17,
-                  color: 'var(--bark)',
-                  marginBottom: 8,
-                }}
-              >
-                {title}
-              </h3>
-              <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.65, fontWeight: 300 }}>
-                {body}
-              </p>
-            </div>
-          ))}
+          <strong style={{ color: 'var(--text2)' }}>Notes:</strong> All figures are for 2-bedroom
+          properties. The 10th and 90th percentiles show the spread of rents in each suburb. Negotiation
+          success % is the share of contributors who paid less than the advertised asking rent. Data is
+          self-reported and should be used as a guide only.
         </div>
-      </div>
+      </main>
 
-      {/* Footer */}
       <footer
         style={{
           background: 'var(--bark)',
@@ -433,12 +339,14 @@ export default function Home() {
           gap: 20,
         }}
       >
-        <div
+        <Link
+          href="/"
           style={{
             fontFamily: 'var(--font-serif), Georgia, serif',
             fontSize: 18,
             fontWeight: 700,
             color: 'white',
+            textDecoration: 'none',
           }}
         >
           FairRent
@@ -456,16 +364,13 @@ export default function Home() {
           >
             AU
           </sup>
-        </div>
+        </Link>
         <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
           Not financial advice. Data from self-reported signed leases. Melbourne, Australia.
         </p>
         <nav style={{ display: 'flex', gap: 20 }}>
-          <Link
-            href="/suburbs"
-            style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}
-          >
-            All suburbs
+          <Link href="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>
+            Check my rent
           </Link>
           <Link
             href="/data"

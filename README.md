@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FairRent
 
-## Getting Started
+Hedonic rent pricing for Melbourne renters. Tells you whether your specific property is fairly priced — not just what the suburb median is.
 
-First, run the development server:
+## Setup
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+```bash
+cp .env.local.example .env.local
+```
+
+Fill in:
+- `NEXT_PUBLIC_SUPABASE_URL` — your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — your Supabase anon key
+- `RESEND_API_KEY` — your Resend API key (for renewal follow-up emails)
+
+### 3. Set up the database
+
+In your Supabase project, run `supabase/schema.sql` in the SQL editor. This creates:
+- `submissions` — rent submissions with property attributes
+- `outcomes` — follow-up data on renewals and negotiations
+
+### 4. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pages
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Description |
+|---|---|
+| `/` | Homepage with property form and result |
+| `/suburbs` | Full suburb data table |
+| `/data` | Methodology explanation |
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+- **`lib/suburbs.ts`** — Suburb data (medians, pressure levels, trends)
+- **`lib/model.ts`** — Hedonic pricing model (`calculateRent`)
+- **`app/components/PropertyForm.tsx`** — Client component: form, autocomplete, result display
+- **`supabase/schema.sql`** — Database schema
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Model
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The hedonic model estimates expected rent by combining:
+1. Suburb baseline (2BR apartment median)
+2. Bedroom/bathroom/type adjustments
+3. Attribute premiums: parking, AC, transit proximity, floor level, condition, pets, outdoor space
 
-## Deploy on Vercel
+See `/data` (methodology page) for the full attribute weight table.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Build
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run build
+npm start
+```
