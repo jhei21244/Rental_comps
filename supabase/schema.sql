@@ -35,3 +35,13 @@ ALTER TABLE outcomes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "public insert" ON submissions FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "public insert" ON outcomes FOR INSERT TO anon WITH CHECK (true);
+
+CREATE TABLE subscriptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at timestamptz DEFAULT now(),
+  email_hash varchar NOT NULL,
+  suburb varchar
+);
+
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public insert" ON subscriptions FOR INSERT TO anon WITH CHECK (true);

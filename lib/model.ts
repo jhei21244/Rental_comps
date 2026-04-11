@@ -67,9 +67,10 @@ const TYPE_ADJUSTMENTS: Record<string, number> = {
 };
 
 export function calculateRent(input: PropertyInput): ModelResult {
-  const suburbData =
-    SUBURBS.find((s) => s.name.toLowerCase() === input.suburb.toLowerCase()) ??
-    SUBURBS[0];
+  const suburbData = SUBURBS.find((s) => s.name.toLowerCase() === input.suburb.toLowerCase());
+  if (!suburbData) {
+    throw new Error(`No data for suburb: ${input.suburb}`);
+  }
 
   const bedAdj = BEDROOM_ADJUSTMENTS[input.bedrooms] ?? 0;
   const bathAdj = BATHROOM_ADJUSTMENTS[input.bathrooms] ?? 0;

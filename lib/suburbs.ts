@@ -358,7 +358,7 @@ export function getSuburbBySlug(slug: string): SuburbData | undefined {
   return SUBURBS.find((s) => s.slug === slug);
 }
 
-export function getSuburbByName(name: string): SuburbData | undefined {
+export function getSuburbByName(name: string): SuburbData {
   return SUBURBS.find(
     (s) => s.name.toLowerCase() === name.toLowerCase()
   ) ?? SUBURBS[0];

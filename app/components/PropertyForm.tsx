@@ -48,10 +48,17 @@ export default function PropertyForm() {
   const [result, setResult] = useState<ModelResult | null>(null);
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const [error, setError] = useState('');
+  const [isCalculating, setIsCalculating] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  const isSuburbValid = useMemo(
+    () => SUBURB_NAMES.some((n) => n.toLowerCase() === suburbInput.toLowerCase()),
+    [suburbInput]
+  );
 
   const suggestions = useMemo(
     () =>
@@ -71,7 +78,13 @@ export default function PropertyForm() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    if (result) {
+      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [result]);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
@@ -79,10 +92,20 @@ export default function PropertyForm() {
       setError('Please enter a suburb.');
       return;
     }
+
+    if (!isSuburbValid) {
+      setError(
+        `We don't have data for ${suburbInput} yet. Try Brunswick, Fitzroy, Richmond, or another inner Melbourne suburb.`
+      );
+      return;
+    }
+
     if (!form.rentPw || form.rentPw < 80) {
       setError('Please enter a valid weekly rent (minimum $80).');
       return;
     }
+
+    setIsCalculating(true);
 
     const input: PropertyInput = {
       suburb: suburbInput.trim(),
@@ -99,10 +122,37 @@ export default function PropertyForm() {
       outdoorSpace: form.outdoorSpace,
     };
 
-    const r = calculateRent(input);
-    setResult(r);
-    setEmailSubmitted(false);
-    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    try {
+      const r = calculateRent(input);
+      setResult(r);
+      setEmailSubmitted(false);
+      setEmailError('');
+    } catch {
+      setError('Unable to calculate rent for this suburb. Please try a different suburb.');
+    } finally {
+      setIsCalculating(false);
+    }
+  }
+
+  async function handleEmailSubmit() {
+    if (!email) return;
+    setEmailError('');
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, suburb: result?.suburb }),
+      });
+      if (res.ok) {
+        setEmailSubmitted(true);
+      } else {
+        setEmailError('Something went wrong. Please try again.');
+      }
+    } catch {
+      setEmailError('Something went wrong. Please try again.');
+    }
   }
 
   const verdictColor = result
@@ -119,8 +169,17 @@ export default function PropertyForm() {
       : 'var(--terrapale)'
     : 'var(--cream)';
 
+  const resultCardBg = result
+    ? result.difference > 0
+      ? 'rgba(196,80,26,0.04)'
+      : 'rgba(61,107,79,0.04)'
+    : 'transparent';
+
+  const submitDisabled = !isSuburbValid || isCalculating;
+
   return (
     <div
+      id="form"
       style={{
         background: 'white',
         border: '1px solid var(--cream3)',
@@ -147,18 +206,45 @@ export default function PropertyForm() {
         {/* Suburb autocomplete */}
         <div style={{ position: 'relative', marginBottom: 14 }} ref={dropdownRef}>
           <label style={label}>Suburb</label>
-          <input
-            type="text"
-            className="form-input"
-            value={suburbInput}
-            placeholder="e.g. Brunswick, Fitzroy, Richmond…"
-            onChange={(e) => {
-              setSuburbInput(e.target.value);
-              setShowSuggestions(true);
-            }}
-            onFocus={() => setShowSuggestions(true)}
-            autoComplete="off"
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              className="form-input"
+              value={suburbInput}
+              placeholder="e.g. Brunswick, Fitzroy, Richmond…"
+              onChange={(e) => {
+                setSuburbInput(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              autoComplete="off"
+              style={
+                isSuburbValid
+                  ? {
+                      borderColor: 'var(--sage)',
+                      boxShadow: '0 0 0 3px rgba(61,107,79,0.1)',
+                      paddingRight: 36,
+                    }
+                  : {}
+              }
+            />
+            {isSuburbValid && (
+              <span
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--sage)',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  pointerEvents: 'none',
+                }}
+              >
+                ✓
+              </span>
+            )}
+          </div>
           {showSuggestions && suggestions.length > 0 && (
             <div
               style={{
@@ -429,32 +515,49 @@ export default function PropertyForm() {
 
         <button
           type="submit"
+          disabled={submitDisabled}
           style={{
             width: '100%',
-            background: 'var(--terra)',
-            color: 'white',
+            background: submitDisabled ? 'var(--cream3)' : 'var(--terra)',
+            color: submitDisabled ? 'var(--text3)' : 'white',
             fontSize: 15,
             fontWeight: 700,
             padding: 14,
             borderRadius: 10,
             border: 'none',
-            cursor: 'pointer',
+            cursor: submitDisabled ? 'not-allowed' : 'pointer',
             letterSpacing: '0.3px',
             transition: 'background 0.15s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--terra2)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--terra)')}
+          onMouseEnter={(e) => {
+            if (!submitDisabled) e.currentTarget.style.background = 'var(--terra2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = submitDisabled ? 'var(--cream3)' : 'var(--terra)';
+          }}
         >
-          Assess this property →
+          {isCalculating && <span className="spinner" />}
+          {isCalculating ? 'Calculating…' : 'Assess this property →'}
         </button>
       </form>
 
       {/* Results */}
-      {result && (
+      {result && !isCalculating && (
         <div
           ref={resultRef}
           className="animate-rise"
-          style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--cream3)' }}
+          style={{
+            marginTop: 20,
+            paddingTop: 16,
+            borderTop: '1px solid var(--cream3)',
+            background: resultCardBg,
+            borderRadius: 12,
+            padding: 16,
+          }}
         >
           {/* Verdict */}
           <div
@@ -467,7 +570,7 @@ export default function PropertyForm() {
           >
             <div
               style={{
-                fontSize: 18,
+                fontSize: 24,
                 fontWeight: 700,
                 color: verdictColor,
                 fontFamily: 'var(--font-serif), Georgia, serif',
@@ -533,15 +636,15 @@ export default function PropertyForm() {
               <tbody>
                 {result.breakdown.map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--cream2)' }}>
-                    <td style={{ padding: '9px 0', paddingRight: 10, fontSize: 13, color: 'var(--text2)' }}>
+                    <td style={{ padding: '14px 0', paddingRight: 10, fontSize: 13, color: 'var(--text2)' }}>
                       {row.attribute}
                     </td>
-                    <td style={{ padding: '9px 0', paddingRight: 10, fontSize: 13, fontWeight: 600, color: 'var(--bark)' }}>
+                    <td style={{ padding: '14px 0', paddingRight: 10, fontSize: 13, fontWeight: 600, color: 'var(--bark)' }}>
                       {row.value}
                     </td>
                     <td
                       style={{
-                        padding: '9px 0',
+                        padding: '14px 0',
                         fontSize: 13,
                         fontWeight: 700,
                         textAlign: 'right',
@@ -628,7 +731,7 @@ export default function PropertyForm() {
                 Stay informed about {result.suburb}
               </div>
               <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 14, lineHeight: 1.6 }}>
-                We'll notify you when {result.suburb}'s model improves and send a follow-up about your
+                We&apos;ll notify you when {result.suburb}&apos;s model improves and send a follow-up about your
                 renewal.
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -649,7 +752,7 @@ export default function PropertyForm() {
                   }}
                 />
                 <button
-                  onClick={() => email && setEmailSubmitted(true)}
+                  onClick={handleEmailSubmit}
                   type="button"
                   style={{
                     background: 'var(--bark)',
@@ -666,6 +769,9 @@ export default function PropertyForm() {
                   Notify me
                 </button>
               </div>
+              {emailError && (
+                <div style={{ fontSize: 12, color: '#b92c2c', marginTop: 8 }}>{emailError}</div>
+              )}
               <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>
                 No marketing. No spam. Unsubscribe anytime.
               </div>
@@ -683,7 +789,7 @@ export default function PropertyForm() {
                 fontWeight: 700,
               }}
             >
-              You're on the list. We'll be in touch when {result.suburb}'s model updates.
+              You&apos;re on the list. We&apos;ll be in touch when {result.suburb}&apos;s model updates.
             </div>
           )}
         </div>

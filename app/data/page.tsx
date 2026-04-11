@@ -208,9 +208,9 @@ export default function DataPage() {
           <p
             style={{ fontSize: 15, color: 'var(--text2)', lineHeight: 1.8, marginBottom: 24 }}
           >
-            These are the current global estimates averaged across all suburbs. Individual suburb models
-            may differ — a garage in Docklands contributes more than one in Preston. As we collect more
-            data, we&apos;ll publish suburb-specific weights.
+            Our current model uses Melbourne-wide attribute weights as initial priors. As each suburb
+            accumulates more data, we&apos;ll publish suburb-specific weights — you can track progress in
+            the suburb table.
           </p>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>

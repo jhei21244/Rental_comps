@@ -100,8 +100,8 @@ export default function Home() {
               marginBottom: 20,
             }}
           >
-            Is $X/week fair for{' '}
-            <em style={{ color: 'var(--terra)', fontStyle: 'italic' }}>your</em> specific property?
+            Is your rent fair for{' '}
+            <em style={{ color: 'var(--terra)', fontStyle: 'italic' }}>exactly</em> this property?
           </h1>
           <p
             style={{
@@ -302,7 +302,7 @@ export default function Home() {
                   </td>
                   <td style={{ padding: '13px 14px' }}>
                     <a
-                      href="#"
+                      href="#form"
                       style={{
                         fontSize: 12,
                         color: 'var(--terra)',
@@ -388,15 +388,15 @@ export default function Home() {
                 background: 'white',
                 border: '1px solid var(--cream3)',
                 borderRadius: 16,
-                padding: 26,
+                padding: 32,
               }}
             >
               <div
                 style={{
                   fontFamily: 'var(--font-serif), Georgia, serif',
-                  fontSize: 32,
+                  fontSize: 40,
                   fontWeight: 900,
-                  color: 'var(--cream3)',
+                  color: 'var(--terra)',
                   marginBottom: 12,
                   lineHeight: 1,
                 }}

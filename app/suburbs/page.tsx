@@ -293,7 +293,7 @@ export default function SuburbsPage() {
                   </td>
                   <td style={{ padding: '13px 14px' }}>
                     <a
-                      href="#"
+                      href="/#form"
                       style={{
                         fontSize: 12,
                         color: 'var(--terra)',
