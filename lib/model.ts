@@ -1,24 +1,25 @@
 import { SUBURBS } from './suburbs';
 
+// Attribute weights derived from real Domain.com.au listing data (Apr 2026, n=30 inner Melbourne)
 export const ATTRIBUTE_WEIGHTS = {
   parking_street: 5,
-  parking_undercover: 35, // ~$25–50/pw premium; cross-checked against real listing data (Apr 2026)
-  parking_garage: 45, // ~$25–50/pw premium; cross-checked against real listing data (Apr 2026)
-  aircon_none: -18,
-  aircon_one_room: 12,
-  aircon_whole: 22,
-  transport_lt5: 35,
+  parking_undercover: 40,    // Real data: +$43/wk avg (n=26 with parking vs n=4 without)
+  parking_garage: 50,         // Estimated ~25% above undercover
+  aircon_none: -16,           // Real data: -$16/wk (no AC vs has AC, n=30)
+  aircon_one_room: 10,
+  aircon_whole: 16,           // Real data: +$16/wk for any AC
+  transport_lt5: 35,          // Literature prior — not yet in data
   transport_5_10: 20,
   transport_10_15: 8,
-  floor_1_3: 12,
+  floor_1_3: 12,              // Literature prior — floor level not extracted (all unknown)
   floor_4plus: 22,
-  condition_renovated: 30,
-  condition_dated: -20,
-  condition_poor: -35,
-  pets_yes: 15,
-  outdoor_small_balcony: 12,
-  outdoor_large_balcony: 22,
-  outdoor_courtyard: 28,
+  condition_renovated: 47,    // Real data: +$47/wk (new_renovated vs maintained, n=30)
+  condition_dated: -25,       // Estimated — small dated sample
+  condition_poor: -40,
+  pets_yes: 15,               // Literature prior
+  outdoor_small_balcony: 40,  // Real data: balcony avg $771 vs none $690 = ~$80/wk; conservative 40
+  outdoor_large_balcony: 65,
+  outdoor_courtyard: 55,      // Real data: courtyard avg $782 (similar to balcony in apartments)
 } as const;
 
 export interface PropertyInput {
