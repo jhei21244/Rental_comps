@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
       parking: input.parking,
       air_con: input.airCon,
       transport_walk_mins: input.transportWalk,
-      floor_level: input.floorLevel,
-      condition: input.condition,
-      pets_allowed: input.petsAllowed,
       outdoor_space: input.outdoorSpace,
+      internal_laundry: input.internalLaundry,
+      furnished: input.furnished === 'Furnished',
+      condition: input.condition,
       source: 'web',
     });
     if (error) {

@@ -1,25 +1,23 @@
 import { SUBURBS } from './suburbs';
 
-// Attribute weights derived from real Domain.com.au listing data (Apr 2026, n=30 inner Melbourne)
+// Attribute weights: real data (Apr 2026, n=30) + literature priors where noted
 export const ATTRIBUTE_WEIGHTS = {
   parking_street: 5,
-  parking_undercover: 40,    // Real data: +$43/wk avg (n=26 with parking vs n=4 without)
-  parking_garage: 50,         // Estimated ~25% above undercover
-  aircon_none: -16,           // Real data: -$16/wk (no AC vs has AC, n=30)
+  parking_undercover: 40,
+  parking_lockup_garage: 52,
   aircon_one_room: 10,
-  aircon_whole: 16,           // Real data: +$16/wk for any AC
-  transport_lt5: 35,          // Literature prior — not yet in data
+  aircon_whole: 16,
+  transport_lt5: 35,
   transport_5_10: 20,
   transport_10_15: 8,
-  floor_1_3: 12,              // Literature prior — floor level not extracted (all unknown)
-  floor_4plus: 22,
-  condition_renovated: 47,    // Real data: +$47/wk (new_renovated vs maintained, n=30)
-  condition_dated: -25,       // Estimated — small dated sample
+  condition_new_build: 60,
+  condition_renovated: 47,
+  condition_dated: -25,
   condition_poor: -40,
-  pets_yes: 15,               // Literature prior
-  outdoor_small_balcony: 40,  // Real data: balcony avg $771 vs none $690 = ~$80/wk; conservative 40
-  outdoor_large_balcony: 65,
-  outdoor_courtyard: 55,      // Real data: courtyard avg $782 (similar to balcony in apartments)
+  outdoor_balcony: 40,
+  outdoor_courtyard_garden: 55,
+  internal_laundry: 20,
+  furnished: 80,
 } as const;
 
 export interface PropertyInput {
@@ -31,10 +29,10 @@ export interface PropertyInput {
   parking: string;
   airCon: string;
   transportWalk: string;
-  floorLevel: string;
-  condition: string;
-  petsAllowed: boolean;
   outdoorSpace: string;
+  internalLaundry: boolean;
+  furnished: string;
+  condition: string;
 }
 
 export interface ModelResult {
@@ -102,14 +100,14 @@ export function calculateRent(input: PropertyInput): ModelResult {
   } else if (input.parking === 'Undercover') {
     parkingContrib = ATTRIBUTE_WEIGHTS.parking_undercover;
     parkingValue = 'Undercover';
-  } else if (input.parking === 'Garage') {
-    parkingContrib = ATTRIBUTE_WEIGHTS.parking_garage;
-    parkingValue = 'Garage';
+  } else if (input.parking === 'Lock-up garage') {
+    parkingContrib = ATTRIBUTE_WEIGHTS.parking_lockup_garage;
+    parkingValue = 'Lock-up garage';
   }
   breakdown.push({ attribute: 'Parking', value: parkingValue, contribution: parkingContrib });
 
   // Air conditioning
-  let airconContrib: number = ATTRIBUTE_WEIGHTS.aircon_none;
+  let airconContrib: number = 0;
   let airconValue = 'None';
   if (input.airCon === 'One room') {
     airconContrib = ATTRIBUTE_WEIGHTS.aircon_one_room;
@@ -135,18 +133,11 @@ export function calculateRent(input: PropertyInput): ModelResult {
   }
   breakdown.push({ attribute: 'Walk to transit', value: transportValue, contribution: transportContrib });
 
-  // Floor level
-  let floorContrib: number = 0;
-  if (input.floorLevel === '1–3') {
-    floorContrib = ATTRIBUTE_WEIGHTS.floor_1_3;
-  } else if (input.floorLevel === '4+') {
-    floorContrib = ATTRIBUTE_WEIGHTS.floor_4plus;
-  }
-  breakdown.push({ attribute: 'Floor level', value: input.floorLevel, contribution: floorContrib });
-
   // Condition
   let condContrib: number = 0;
-  if (input.condition === 'Recently renovated') {
+  if (input.condition === 'New build') {
+    condContrib = ATTRIBUTE_WEIGHTS.condition_new_build;
+  } else if (input.condition === 'Recently renovated') {
     condContrib = ATTRIBUTE_WEIGHTS.condition_renovated;
   } else if (input.condition === 'A bit dated') {
     condContrib = ATTRIBUTE_WEIGHTS.condition_dated;
@@ -155,37 +146,36 @@ export function calculateRent(input: PropertyInput): ModelResult {
   }
   breakdown.push({ attribute: 'Condition', value: input.condition, contribution: condContrib });
 
-  // Pets
-  const petsContrib: number = input.petsAllowed ? ATTRIBUTE_WEIGHTS.pets_yes : 0;
-  breakdown.push({
-    attribute: 'Pets allowed',
-    value: input.petsAllowed ? 'Yes' : 'No',
-    contribution: petsContrib,
-  });
-
   // Outdoor space
   let outdoorContrib: number = 0;
   let outdoorValue = 'None';
-  if (input.outdoorSpace === 'Small balcony') {
-    outdoorContrib = ATTRIBUTE_WEIGHTS.outdoor_small_balcony;
-    outdoorValue = 'Small balcony';
-  } else if (input.outdoorSpace === 'Large balcony') {
-    outdoorContrib = ATTRIBUTE_WEIGHTS.outdoor_large_balcony;
-    outdoorValue = 'Large balcony';
-  } else if (input.outdoorSpace === 'Private courtyard/garden') {
-    outdoorContrib = ATTRIBUTE_WEIGHTS.outdoor_courtyard;
-    outdoorValue = 'Private courtyard/garden';
+  if (input.outdoorSpace === 'Balcony') {
+    outdoorContrib = ATTRIBUTE_WEIGHTS.outdoor_balcony;
+    outdoorValue = 'Balcony';
+  } else if (input.outdoorSpace === 'Courtyard or garden') {
+    outdoorContrib = ATTRIBUTE_WEIGHTS.outdoor_courtyard_garden;
+    outdoorValue = 'Courtyard or garden';
   }
   breakdown.push({ attribute: 'Outdoor space', value: outdoorValue, contribution: outdoorContrib });
+
+  // Internal laundry
+  let contrib: number = 0;
+  if (input.internalLaundry) { contrib = ATTRIBUTE_WEIGHTS.internal_laundry; }
+  breakdown.push({ attribute: 'Internal laundry', value: input.internalLaundry ? 'Yes' : 'No', contribution: contrib });
+
+  // Furnished
+  let furnishedContrib: number = 0;
+  if (input.furnished === 'Furnished') { furnishedContrib = ATTRIBUTE_WEIGHTS.furnished; }
+  breakdown.push({ attribute: 'Furnished', value: input.furnished, contribution: furnishedContrib });
 
   const attribTotal =
     parkingContrib +
     airconContrib +
     transportContrib +
-    floorContrib +
     condContrib +
-    petsContrib +
-    outdoorContrib;
+    outdoorContrib +
+    contrib +
+    furnishedContrib;
 
   const expectedRent = Math.round(base + attribTotal);
 

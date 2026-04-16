@@ -9,10 +9,10 @@ CREATE TABLE submissions (
   parking varchar,
   air_con varchar,
   transport_walk_mins varchar,
-  floor_level varchar,
-  condition varchar,
-  pets_allowed boolean,
   outdoor_space varchar,
+  internal_laundry boolean,
+  furnished boolean,
+  condition varchar,
   email_hash varchar,
   follow_up_token uuid DEFAULT gen_random_uuid(),
   follow_up_sent timestamptz,
@@ -32,9 +32,8 @@ CREATE TABLE outcomes (
 
 ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE outcomes ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY "public insert" ON submissions FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "public insert" ON outcomes FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "public insert outcomes" ON outcomes FOR INSERT TO anon WITH CHECK (true);
 
 CREATE TABLE subscriptions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

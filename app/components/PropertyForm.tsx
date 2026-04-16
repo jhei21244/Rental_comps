@@ -12,10 +12,10 @@ type FormState = {
   parking: string;
   airCon: string;
   transportWalk: string;
-  floorLevel: string;
   condition: string;
-  petsAllowed: boolean;
   outdoorSpace: string;
+  internalLaundry: boolean;
+  furnished: string;
 };
 
 const defaultForm: FormState = {
@@ -26,10 +26,10 @@ const defaultForm: FormState = {
   parking: 'None',
   airCon: 'None',
   transportWalk: 'Under 5 min',
-  floorLevel: 'Ground',
   condition: 'Well maintained',
-  petsAllowed: false,
   outdoorSpace: 'None',
+  internalLaundry: false,
+  furnished: 'Unfurnished',
 };
 
 const label: React.CSSProperties = {
@@ -116,10 +116,10 @@ export default function PropertyForm() {
       parking: form.parking,
       airCon: form.airCon,
       transportWalk: form.transportWalk,
-      floorLevel: form.floorLevel,
-      condition: form.condition,
-      petsAllowed: form.petsAllowed,
       outdoorSpace: form.outdoorSpace,
+      internalLaundry: form.internalLaundry,
+      furnished: form.furnished,
+      condition: form.condition,
     };
 
     await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -382,7 +382,7 @@ export default function PropertyForm() {
               <option>None</option>
               <option>Street</option>
               <option>Undercover</option>
-              <option>Garage</option>
+              <option>Lock-up garage</option>
             </select>
           </div>
           <div>
@@ -399,34 +399,19 @@ export default function PropertyForm() {
           </div>
         </div>
 
-        {/* Transport & Floor */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-          <div>
-            <label style={label}>Walk to tram/train</label>
-            <select
-              className="form-select"
-              value={form.transportWalk}
-              onChange={(e) => setForm({ ...form, transportWalk: e.target.value })}
-            >
-              <option>Under 5 min</option>
-              <option value="5–10 min">5–10 min</option>
-              <option value="10–15 min">10–15 min</option>
-              <option>Over 15 min</option>
-            </select>
-          </div>
-          <div>
-            <label style={label}>Floor level</label>
-            <select
-              className="form-select"
-              value={form.floorLevel}
-              onChange={(e) => setForm({ ...form, floorLevel: e.target.value })}
-            >
-              <option>Ground</option>
-              <option value="1–3">1–3</option>
-              <option value="4+">4+</option>
-              <option>N/A</option>
-            </select>
-          </div>
+        {/* Transport */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={label}>Walk to tram/train</label>
+          <select
+            className="form-select"
+            value={form.transportWalk}
+            onChange={(e) => setForm({ ...form, transportWalk: e.target.value })}
+          >
+            <option>Under 5 min</option>
+            <option value="5–10 min">5–10 min</option>
+            <option value="10–15 min">10–15 min</option>
+            <option>Over 15 min</option>
+          </select>
         </div>
 
         {/* Condition & Outdoor */}
@@ -438,6 +423,7 @@ export default function PropertyForm() {
               value={form.condition}
               onChange={(e) => setForm({ ...form, condition: e.target.value })}
             >
+              <option>New build</option>
               <option>Recently renovated</option>
               <option>Well maintained</option>
               <option>A bit dated</option>
@@ -452,26 +438,25 @@ export default function PropertyForm() {
               onChange={(e) => setForm({ ...form, outdoorSpace: e.target.value })}
             >
               <option>None</option>
-              <option>Small balcony</option>
-              <option>Large balcony</option>
-              <option value="Private courtyard/garden">Private courtyard/garden</option>
+              <option>Balcony</option>
+              <option>Courtyard or garden</option>
             </select>
           </div>
         </div>
 
-        {/* Pets toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <label style={{ ...label, marginBottom: 0 }}>Pets allowed</label>
+        {/* Internal laundry toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <label style={{ ...label, marginBottom: 0 }}>Internal laundry</label>
           <button
             type="button"
             role="switch"
-            aria-checked={form.petsAllowed}
-            onClick={() => setForm({ ...form, petsAllowed: !form.petsAllowed })}
+            aria-checked={form.internalLaundry}
+            onClick={() => setForm({ ...form, internalLaundry: !form.internalLaundry })}
             style={{
               width: 44,
               height: 24,
               borderRadius: 12,
-              background: form.petsAllowed ? 'var(--terra)' : 'var(--cream3)',
+              background: form.internalLaundry ? 'var(--terra)' : 'var(--cream3)',
               border: 'none',
               cursor: 'pointer',
               position: 'relative',
@@ -483,7 +468,7 @@ export default function PropertyForm() {
               style={{
                 position: 'absolute',
                 top: 3,
-                left: form.petsAllowed ? 23 : 3,
+                left: form.internalLaundry ? 23 : 3,
                 width: 18,
                 height: 18,
                 borderRadius: '50%',
@@ -494,8 +479,21 @@ export default function PropertyForm() {
             />
           </button>
           <span style={{ fontSize: 13, color: 'var(--text2)' }}>
-            {form.petsAllowed ? 'Yes' : 'No'}
+            {form.internalLaundry ? 'Yes' : 'No'}
           </span>
+        </div>
+
+        {/* Furnished */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={label}>Furnished</label>
+          <select
+            className="form-select"
+            value={form.furnished}
+            onChange={(e) => setForm({ ...form, furnished: e.target.value })}
+          >
+            <option>Unfurnished</option>
+            <option>Furnished</option>
+          </select>
         </div>
 
         {error && (
