@@ -2,8 +2,8 @@ import { SUBURBS } from './suburbs';
 
 export const ATTRIBUTE_WEIGHTS = {
   parking_street: 5,
-  parking_undercover: 35,
-  parking_garage: 45,
+  parking_undercover: 35, // ~$25–50/pw premium; cross-checked against real listing data (Apr 2026)
+  parking_garage: 45, // ~$25–50/pw premium; cross-checked against real listing data (Apr 2026)
   aircon_none: -18,
   aircon_one_room: 12,
   aircon_whole: 22,
