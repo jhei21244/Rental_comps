@@ -119,9 +119,9 @@ export default function Home() {
           </p>
           <div style={{ display: 'flex', gap: 32, marginBottom: 40, flexWrap: 'wrap' }}>
             {[
-              { num: '12,400+', label: 'properties assessed' },
-              { num: '47', label: 'suburbs calibrated' },
-              { num: '±$31/wk', label: 'average accuracy' },
+              { num: '486', label: 'listings analysed' },
+              { num: '24', label: 'Melbourne suburbs' },
+              { num: '14', label: 'attributes priced' },
             ].map(({ num, label }) => (
               <div key={label} style={{ borderLeft: '2px solid var(--terra)', paddingLeft: 14 }}>
                 <div

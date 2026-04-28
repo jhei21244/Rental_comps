@@ -1,11 +1,38 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ATTRIBUTE_WEIGHTS } from '@/lib/model';
 
 export const metadata: Metadata = {
   title: 'Methodology — FairRent',
   description:
     'How FairRent uses hedonic pricing to assess whether your specific rental property is fairly priced.',
 };
+
+const W = ATTRIBUTE_WEIGHTS;
+const fmt = (v: number) => (v === 0 ? '—' : `${v > 0 ? '+' : '−'}$${Math.abs(v)}/wk`);
+const ATTRIBUTE_ROWS: Array<{ attr: string; val: string; contrib: string }> = [
+  { attr: 'Parking', val: 'None', contrib: '—' },
+  { attr: 'Parking', val: 'Street', contrib: fmt(W.parking_street) },
+  { attr: 'Parking', val: 'Undercover', contrib: fmt(W.parking_undercover) },
+  { attr: 'Parking', val: 'Lock-up garage', contrib: fmt(W.parking_lockup_garage) },
+  { attr: 'Air conditioning', val: 'None', contrib: '—' },
+  { attr: 'Air conditioning', val: 'One room', contrib: fmt(W.aircon_one_room) },
+  { attr: 'Air conditioning', val: 'Whole property', contrib: fmt(W.aircon_whole) },
+  { attr: 'Walk to transit', val: 'Under 5 min', contrib: fmt(W.transport_lt5) },
+  { attr: 'Walk to transit', val: '5–10 min', contrib: fmt(W.transport_5_10) },
+  { attr: 'Walk to transit', val: '10–15 min', contrib: fmt(W.transport_10_15) },
+  { attr: 'Walk to transit', val: 'Over 15 min', contrib: '—' },
+  { attr: 'Condition', val: 'New build', contrib: fmt(W.condition_new_build) },
+  { attr: 'Condition', val: 'Recently renovated', contrib: fmt(W.condition_renovated) },
+  { attr: 'Condition', val: 'Well maintained', contrib: '—' },
+  { attr: 'Condition', val: 'A bit dated', contrib: fmt(W.condition_dated) },
+  { attr: 'Condition', val: 'Needs work', contrib: fmt(W.condition_poor) },
+  { attr: 'Outdoor space', val: 'None', contrib: '—' },
+  { attr: 'Outdoor space', val: 'Balcony', contrib: fmt(W.outdoor_balcony) },
+  { attr: 'Outdoor space', val: 'Courtyard or garden', contrib: fmt(W.outdoor_courtyard_garden) },
+  { attr: 'Internal laundry', val: 'Yes', contrib: fmt(W.internal_laundry) },
+  { attr: 'Furnished', val: 'Furnished', contrib: fmt(W.furnished) },
+];
 
 export default function DataPage() {
   return (
@@ -235,30 +262,7 @@ export default function DataPage() {
               </tr>
             </thead>
             <tbody>
-              {[
-                { attr: 'Parking', val: 'Street', contrib: '+$5/wk' },
-                { attr: 'Parking', val: 'Undercover', contrib: '+$35/wk' },
-                { attr: 'Parking', val: 'Garage', contrib: '+$45/wk' },
-                { attr: 'Parking', val: 'None', contrib: '—' },
-                { attr: 'Air conditioning', val: 'None', contrib: '−$18/wk' },
-                { attr: 'Air conditioning', val: 'One room', contrib: '+$12/wk' },
-                { attr: 'Air conditioning', val: 'Whole property', contrib: '+$22/wk' },
-                { attr: 'Walk to transit', val: 'Under 5 min', contrib: '+$35/wk' },
-                { attr: 'Walk to transit', val: '5–10 min', contrib: '+$20/wk' },
-                { attr: 'Walk to transit', val: '10–15 min', contrib: '+$8/wk' },
-                { attr: 'Walk to transit', val: 'Over 15 min', contrib: '—' },
-                { attr: 'Floor level', val: 'Ground / N/A', contrib: '—' },
-                { attr: 'Floor level', val: '1–3', contrib: '+$12/wk' },
-                { attr: 'Floor level', val: '4+', contrib: '+$22/wk' },
-                { attr: 'Condition', val: 'Needs work', contrib: '−$35/wk' },
-                { attr: 'Condition', val: 'A bit dated', contrib: '−$20/wk' },
-                { attr: 'Condition', val: 'Well maintained', contrib: '—' },
-                { attr: 'Condition', val: 'Recently renovated', contrib: '+$30/wk' },
-                { attr: 'Pets allowed', val: 'Yes', contrib: '+$15/wk' },
-                { attr: 'Outdoor space', val: 'Small balcony', contrib: '+$12/wk' },
-                { attr: 'Outdoor space', val: 'Large balcony', contrib: '+$22/wk' },
-                { attr: 'Outdoor space', val: 'Private courtyard/garden', contrib: '+$28/wk' },
-              ].map((row, i) => (
+              {ATTRIBUTE_ROWS.map((row, i) => (
                 <tr
                   key={i}
                   style={{ borderBottom: '1px solid var(--cream2)' }}
