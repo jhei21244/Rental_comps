@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isSameOrigin, validateSubmission } from '@/lib/api';
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { input, result } = body;
+  if (!isSameOrigin(request)) {
+    return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const payload = (body && typeof body === 'object' ? (body as Record<string, unknown>).input : undefined);
+  const validation = validateSubmission(payload);
+  if (!validation.ok) {
+    return NextResponse.json({ ok: false, error: validation.error }, { status: 400 });
+  }
+  const input = validation.value;
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     const { supabase } = await import('@/lib/supabase');
@@ -23,10 +39,11 @@ export async function POST(request: NextRequest) {
     });
     if (error) {
       console.error('Supabase insert error:', error);
+      return NextResponse.json({ ok: false, error: 'Failed to save' }, { status: 500 });
     }
   } else {
-    console.log('[dev] Submission received:', { input, result });
+    console.log('[dev] Submission received:', input);
   }
 
-  return NextResponse.json(result);
+  return NextResponse.json({ ok: true });
 }
