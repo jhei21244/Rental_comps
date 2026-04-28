@@ -129,6 +129,11 @@ export default function PropertyForm() {
       setResult(r);
       setEmailSubmitted(false);
       setEmailError('');
+      void fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input }),
+      }).catch(() => {});
     } catch {
       setError('Unable to calculate rent for this suburb. Please try a different suburb.');
     } finally {
