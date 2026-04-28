@@ -1,0 +1,9 @@
+name = "fairrent-domain-scraper"
+main = "src/index.js"
+compatibility_date = "2026-04-01"
+account_id = "32cbc718d72e676ba1fa17c2f36b6227"
+
+compatibility_flags = ["nodejs_compat"]
+
+[browser]
+binding = "BROWSER"
