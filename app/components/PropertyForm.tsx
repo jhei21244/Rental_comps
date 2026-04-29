@@ -5,6 +5,7 @@ import { SUBURB_NAMES, getSuburbByName } from '@/lib/suburbs';
 import { calculateRent, type PropertyInput, type ModelResult } from '@/lib/model';
 import SuburbCompare from './SuburbCompare';
 import ConfigCard from './ConfigCard';
+import HighImpactTweaks from './HighImpactTweaks';
 
 type FormState = {
   propertyType: string;
@@ -602,6 +603,10 @@ export default function PropertyForm() {
               <strong>${result.expectedRent}/wk</strong>
             </div>
           </div>
+
+          {configInput && (
+            <HighImpactTweaks current={configInput} onApply={handleConfigChange} />
+          )}
 
           {originalInput && configInput && (
             <ConfigCard
