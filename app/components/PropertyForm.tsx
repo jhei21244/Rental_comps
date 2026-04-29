@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { SUBURB_NAMES } from '@/lib/suburbs';
+import { SUBURB_NAMES, getSuburbByName } from '@/lib/suburbs';
 import { calculateRent, type PropertyInput, type ModelResult } from '@/lib/model';
 import SuburbCompare from './SuburbCompare';
 import ConfigCard from './ConfigCard';
@@ -592,23 +592,15 @@ export default function PropertyForm() {
               }}
             >
               {result.difference === 0
-                ? 'Your rent is exactly at market rate'
+                ? "Your rent matches this configuration's expected rent"
                 : result.difference < 0
-                ? `Your rent is $${Math.abs(result.difference)}/week below market`
-                : `Your rent is $${result.difference}/week above market`}
+                ? `Your rent is $${Math.abs(result.difference)}/wk under this configuration's expected rent`
+                : `Your rent is $${result.difference}/wk over this configuration's expected rent`}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text2)' }}>
-              Expected rent:{' '}
-              <strong>${result.expectedRent}/week</strong> | Your rent:{' '}
-              <strong>${result.actualRent}/week</strong>
+              Your rent: <strong>${result.actualRent}/wk</strong> · Expected:{' '}
+              <strong>${result.expectedRent}/wk</strong>
             </div>
-            {result.difference !== 0 && (
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
-                {result.difference > 0
-                  ? `Your rent is $${result.difference}/week above what this property would typically rent for in ${result.suburb}.`
-                  : `You're paying $${Math.abs(result.difference)}/week less than the estimated market rate for this type of property in ${result.suburb}.`}
-              </div>
-            )}
           </div>
 
           {originalInput && configInput && (
@@ -620,32 +612,51 @@ export default function PropertyForm() {
             />
           )}
 
-          {/* Confidence note */}
-          <div
-            style={{
-              background: 'var(--cream)',
-              borderRadius: 8,
-              padding: '10px 14px',
-              fontSize: 12,
-              color: 'var(--text2)',
-              marginBottom: 16,
-            }}
-          >
-            <span
-              style={{
-                fontWeight: 700,
-                color:
-                  result.confidence === 'High'
-                    ? 'var(--sage)'
-                    : result.confidence === 'Medium'
-                    ? 'var(--terra)'
-                    : 'var(--text3)',
-              }}
-            >
-              {result.confidence} confidence
-            </span>{' '}
-            — based on {result.records.toLocaleString()} comparable properties in {result.suburb}
-          </div>
+          {(() => {
+            const sub = getSuburbByName(result.suburb);
+            const isBaselineConfig =
+              configInput?.propertyType === 'Apartment' && configInput?.bedrooms === '2';
+            const isSmallSample = sub.n < 10;
+            return (
+              <div
+                style={{
+                  background: 'var(--cream)',
+                  borderRadius: 8,
+                  padding: '10px 14px',
+                  marginBottom: 16,
+                }}
+              >
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.55 }}>
+                  {isBaselineConfig ? (
+                    <>
+                      <strong>{result.suburb} 2BR apartments</strong> rent for $
+                      {sub.median2br}/wk on average — range ${sub.p10}–${sub.p90}/wk
+                      across {sub.n} listings (Apr 2026).
+                    </>
+                  ) : (
+                    <>
+                      Suburb baseline derived from <strong>{sub.n} 2BR apartment</strong>{' '}
+                      listings in {result.suburb} (Apr 2026); your configuration sits
+                      outside that baseline so the expected rent is extrapolated via
+                      attribute weights.
+                    </>
+                  )}
+                </div>
+                {isSmallSample && (
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: 'var(--terra)',
+                      fontWeight: 700,
+                      marginTop: 6,
+                    }}
+                  >
+                    Small sample ({sub.n} listings) — treat as indicative.
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {configInput && (
             <SuburbCompare input={configInput} onSelect={handleSuburbSwap} />
