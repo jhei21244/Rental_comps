@@ -48,7 +48,7 @@ export interface ModelResult {
   suburb: string;
 }
 
-const BEDROOM_ADJUSTMENTS: Record<string, number> = {
+export const BEDROOM_ADJUSTMENTS: Record<string, number> = {
   Studio: -120,
   '1': -80,
   '2': 0,
@@ -56,13 +56,13 @@ const BEDROOM_ADJUSTMENTS: Record<string, number> = {
   '4+': 180,
 };
 
-const BATHROOM_ADJUSTMENTS: Record<string, number> = {
+export const BATHROOM_ADJUSTMENTS: Record<string, number> = {
   '1': 0,
   '2': 30,
   '3+': 50,
 };
 
-const TYPE_ADJUSTMENTS: Record<string, number> = {
+export const TYPE_ADJUSTMENTS: Record<string, number> = {
   Apartment: 0,
   House: 50,
   Townhouse: 20,

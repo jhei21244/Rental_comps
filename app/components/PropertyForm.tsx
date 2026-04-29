@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { SUBURB_NAMES } from '@/lib/suburbs';
 import { calculateRent, type PropertyInput, type ModelResult } from '@/lib/model';
 import SuburbCompare from './SuburbCompare';
+import ConfigCard from './ConfigCard';
 
 type FormState = {
   propertyType: string;
@@ -47,7 +48,8 @@ export default function PropertyForm() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [form, setForm] = useState<FormState>(defaultForm);
   const [result, setResult] = useState<ModelResult | null>(null);
-  const [submittedInput, setSubmittedInput] = useState<PropertyInput | null>(null);
+  const [originalInput, setOriginalInput] = useState<PropertyInput | null>(null);
+  const [configInput, setConfigInput] = useState<PropertyInput | null>(null);
   const [error, setError] = useState('');
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -126,7 +128,8 @@ export default function PropertyForm() {
     try {
       const r = calculateRent(input);
       setResult(r);
-      setSubmittedInput(input);
+      setOriginalInput(input);
+      setConfigInput(input);
       void fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,17 +142,33 @@ export default function PropertyForm() {
     }
   }
 
-  function handleSuburbSwap(name: string) {
-    if (!submittedInput) return;
-    const next: PropertyInput = { ...submittedInput, suburb: name };
+  function handleConfigChange(next: PropertyInput) {
     try {
       const r = calculateRent(next);
-      setSubmittedInput(next);
+      setConfigInput(next);
       setResult(r);
-      setSuburbInput(name);
+      setSuburbInput(next.suburb);
+      setForm({
+        propertyType: next.propertyType,
+        bedrooms: next.bedrooms,
+        bathrooms: next.bathrooms,
+        rentPw: next.rentPw,
+        parking: next.parking,
+        airCon: next.airCon,
+        transportWalk: next.transportWalk,
+        condition: next.condition,
+        outdoorSpace: next.outdoorSpace,
+        internalLaundry: next.internalLaundry,
+        furnished: next.furnished,
+      });
     } catch {
-      // Unknown suburb — should never happen because we iterate SUBURBS
+      // Unknown suburb — only reachable from SuburbCompare, which iterates SUBURBS
     }
+  }
+
+  function handleSuburbSwap(name: string) {
+    if (!configInput) return;
+    handleConfigChange({ ...configInput, suburb: name });
   }
 
   const verdictColor = result
@@ -592,98 +611,14 @@ export default function PropertyForm() {
             )}
           </div>
 
-          {/* Breakdown table */}
-          <div style={{ marginBottom: 16 }}>
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: '1.5px',
-                textTransform: 'uppercase',
-                color: 'var(--text3)',
-                marginBottom: 12,
-              }}
-            >
-              Attribute breakdown
-            </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--cream3)' }}>
-                  {['Attribute', 'Your property', 'Est. contribution'].map((h, i) => (
-                    <th
-                      key={h}
-                      style={{
-                        textAlign: i === 2 ? 'right' : 'left',
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: 'var(--text3)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.8px',
-                        padding: '8px 0',
-                        paddingRight: i < 2 ? 10 : 0,
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {result.breakdown.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--cream2)' }}>
-                    <td style={{ padding: '14px 0', paddingRight: 10, fontSize: 13, color: 'var(--text2)' }}>
-                      {row.attribute}
-                    </td>
-                    <td style={{ padding: '14px 0', paddingRight: 10, fontSize: 13, fontWeight: 600, color: 'var(--bark)' }}>
-                      {row.value}
-                    </td>
-                    <td
-                      style={{
-                        padding: '14px 0',
-                        fontSize: 13,
-                        fontWeight: 700,
-                        textAlign: 'right',
-                        color:
-                          i === 0
-                            ? 'var(--bark)'
-                            : row.contribution > 0
-                            ? 'var(--terra)'
-                            : row.contribution < 0
-                            ? 'var(--sage)'
-                            : 'var(--text3)',
-                      }}
-                    >
-                      {i === 0
-                        ? `$${row.contribution}/wk`
-                        : row.contribution === 0
-                        ? '—'
-                        : `${row.contribution > 0 ? '+' : ''}$${row.contribution}/wk`}
-                    </td>
-                  </tr>
-                ))}
-                <tr style={{ borderTop: '2px solid var(--cream3)' }}>
-                  <td
-                    colSpan={2}
-                    style={{ padding: '12px 0', paddingRight: 10, fontSize: 13, fontWeight: 700, color: 'var(--bark)' }}
-                  >
-                    Expected market rent
-                  </td>
-                  <td
-                    style={{
-                      padding: '12px 0',
-                      fontSize: 15,
-                      fontWeight: 700,
-                      textAlign: 'right',
-                      color: 'var(--bark)',
-                      fontFamily: 'var(--font-serif), Georgia, serif',
-                    }}
-                  >
-                    ${result.expectedRent}/wk
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {originalInput && configInput && (
+            <ConfigCard
+              original={originalInput}
+              current={configInput}
+              result={result}
+              onChange={handleConfigChange}
+            />
+          )}
 
           {/* Confidence note */}
           <div
@@ -712,8 +647,8 @@ export default function PropertyForm() {
             — based on {result.records.toLocaleString()} comparable properties in {result.suburb}
           </div>
 
-          {submittedInput && (
-            <SuburbCompare input={submittedInput} onSelect={handleSuburbSwap} />
+          {configInput && (
+            <SuburbCompare input={configInput} onSelect={handleSuburbSwap} />
           )}
         </div>
       )}
