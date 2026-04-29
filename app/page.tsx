@@ -119,9 +119,9 @@ export default function Home() {
           </p>
           <div style={{ display: 'flex', gap: 32, marginBottom: 40, flexWrap: 'wrap' }}>
             {[
-              { num: '12,400+', label: 'properties assessed' },
-              { num: '47', label: 'suburbs calibrated' },
-              { num: '±$31/wk', label: 'average accuracy' },
+              { num: '486', label: 'listings analysed' },
+              { num: '24', label: 'Melbourne suburbs' },
+              { num: '14', label: 'attributes priced' },
             ].map(({ num, label }) => (
               <div key={label} style={{ borderLeft: '2px solid var(--terra)', paddingLeft: 14 }}>
                 <div
@@ -301,8 +301,8 @@ export default function Home() {
                     {suburb.n.toLocaleString()}
                   </td>
                   <td style={{ padding: '13px 14px' }}>
-                    <a
-                      href="#form"
+                    <Link
+                      href="/contribute"
                       style={{
                         fontSize: 12,
                         color: 'var(--terra)',
@@ -311,7 +311,7 @@ export default function Home() {
                       }}
                     >
                       Contribute
-                    </a>
+                    </Link>
                   </td>
                 </tr>
               ))}
@@ -370,18 +370,21 @@ export default function Home() {
               num: '01',
               title: 'Enter your suburb and rent',
               body: 'Describe your property — suburb, size, and the weekly rent you agreed on. Takes about 90 seconds.',
+              cta: null as { href: string; label: string } | null,
             },
             {
               num: '02',
               title: 'Get a precise answer',
               body: 'Our hedonic model prices each attribute individually. You get a dollar verdict showing exactly where your rent sits and why.',
+              cta: null as { href: string; label: string } | null,
             },
             {
               num: '03',
               title: 'Report your outcome',
               body: 'Did you negotiate? Did the rent increase? Share your outcome anonymously and help the next renter in your suburb.',
+              cta: { href: '/contribute', label: 'Report yours →' },
             },
-          ].map(({ num, title, body }) => (
+          ].map(({ num, title, body, cta }) => (
             <div
               key={num}
               style={{
@@ -416,6 +419,21 @@ export default function Home() {
               <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.65, fontWeight: 300 }}>
                 {body}
               </p>
+              {cta && (
+                <Link
+                  href={cta.href}
+                  style={{
+                    display: 'inline-block',
+                    marginTop: 14,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: 'var(--terra)',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {cta.label}
+                </Link>
+              )}
             </div>
           ))}
         </div>

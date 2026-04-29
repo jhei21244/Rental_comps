@@ -11,7 +11,7 @@ import statistics
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
-DATA_DIR = Path("/home/openclaw/projects/fairrent/data")
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 OUTPUT_FILE = DATA_DIR / "all_listings_raw.json"
 

@@ -11,6 +11,38 @@ Requires: pandas, numpy, statsmodels
 
 Usage:
     python scripts/derive_weights.py
+
+KNOWN GAPS (Apr 2026)
+---------------------
+This script is materially out of sync with the live model in lib/model.ts.
+Before treating its output as production-ready:
+
+  1. Wiring: this reads `data/listings_clean.json` (output of parse_listings.py,
+     which only sees card-level data). The richer attribute data in
+     `data/all_listings_raw.json` (from collect_listings_v2.py) is never fed
+     into the regression. A bridge script is needed.
+
+  2. Vocabulary mismatch: collect_listings_v2 emits parking_type values like
+     "lockup_garage", "undercover", "carport"; parse_listings collapses to
+     "garage"/"undercover"/"street"/"none". The live model uses
+     parking_lockup_garage / parking_undercover / parking_street.
+
+  3. Unwired attributes (in lib/model.ts but not regressed here):
+       - condition_new_build, condition_renovated, condition_dated, condition_poor
+       - outdoor_courtyard_garden (currently lumped with balcony as has_outdoor)
+       - internal_laundry, furnished
+       - transport_lt5 / transport_5_10 / transport_10_15
+         (cannot be derived from listings — requires a separate geocoding
+          step against PTV stops + property address)
+
+  4. Aircon estimates below are fabricated, not regressed: extract_weights()
+     splits a single binary `has_aircon` coefficient in half to populate
+     aircon_one_room and aircon_whole. The regression itself only has one AC
+     regressor.
+
+  5. Removed regressors still present here: `floor_mid`, `floor_upper`,
+     `pets_allowed`. Floor and pets were dropped from the schema and the live
+     model. Their columns will be NaN-heavy and pollute the fit.
 """
 
 import json
@@ -29,20 +61,25 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 INPUT_FILE = DATA_DIR / "listings_clean.json"
 OUTPUT_FILE = DATA_DIR / "attribute_weights.json"
 
-# Current hardcoded weights from lib/model.ts (for comparison)
+# Current weights from lib/model.ts ATTRIBUTE_WEIGHTS — kept in sync so the
+# comparison column reflects what's actually deployed. Update both together.
 CURRENT_WEIGHTS = {
-    "parking_street":       5,
-    "parking_undercover":  35,
-    "parking_garage":      45,
-    "aircon_none":        -18,
-    "aircon_one_room":     12,
-    "aircon_whole":        22,
-    "floor_1_3":           12,
-    "floor_4plus":         22,
-    "outdoor_small_balcony": 12,
-    "outdoor_large_balcony": 22,
-    "outdoor_courtyard":   28,
-    "pets_yes":            15,
+    "parking_street":             5,
+    "parking_undercover":        40,
+    "parking_lockup_garage":     52,
+    "aircon_one_room":           10,
+    "aircon_whole":              16,
+    "transport_lt5":             35,
+    "transport_5_10":            20,
+    "transport_10_15":            8,
+    "condition_new_build":       60,
+    "condition_renovated":       47,
+    "condition_dated":          -25,
+    "condition_poor":           -40,
+    "outdoor_balcony":           40,
+    "outdoor_courtyard_garden":  55,
+    "internal_laundry":          20,
+    "furnished":                 80,
 }
 
 
@@ -123,24 +160,33 @@ def extract_weights(model) -> dict:
             return "*"
         return ""
 
-    weights = {
-        # Parking
-        "parking_street":     coef_val("parking_street"),
-        "parking_undercover": coef_val("parking_undercover"),
-        "parking_garage":     coef_val("parking_garage"),
-        # Air con — we have binary; map to "whole property" equivalent
-        "aircon_none":        round(-coef_val("has_aircon") / 2, 1),
-        "aircon_one_room":    round(coef_val("has_aircon") / 2, 1),
-        "aircon_whole":       coef_val("has_aircon"),
-        # Floor
-        "floor_1_3":          coef_val("floor_mid"),
-        "floor_4plus":        coef_val("floor_upper"),
-        # Outdoor — balcony vs courtyard premium
-        "outdoor_small_balcony": round(coef_val("has_outdoor") * 0.5, 1),
-        "outdoor_large_balcony": coef_val("has_outdoor"),
-        "outdoor_courtyard":     round(coef_val("has_outdoor") + coef_val("outdoor_courtyard"), 1),
-        # Pets
-        "pets_yes": coef_val("pets_allowed"),
+    # Map regression coefficients into the live model's attribute schema.
+    # Keys with value None are NOT regressed by this script — see KNOWN GAPS
+    # in the module docstring. Their estimates remain whatever lib/model.ts
+    # has (literature priors); the comparison table prints "n/a" for them.
+    weights: dict = {
+        "parking_street":            coef_val("parking_street"),
+        "parking_undercover":        coef_val("parking_undercover"),
+        # build_feature_matrix uses "parking_garage" as the lockup-garage proxy
+        "parking_lockup_garage":     coef_val("parking_garage"),
+        # Aircon: only a binary regressor exists; cannot separate one-room vs whole
+        "aircon_one_room":           None,
+        "aircon_whole":              coef_val("has_aircon"),
+        # Transit: not regressed (requires geocoding step)
+        "transport_lt5":             None,
+        "transport_5_10":            None,
+        "transport_10_15":           None,
+        # Condition: not regressed yet (needs v2 attribute data wired in)
+        "condition_new_build":       None,
+        "condition_renovated":       None,
+        "condition_dated":           None,
+        "condition_poor":            None,
+        # Outdoor: has_outdoor is a single binary; treat as balcony equivalent
+        "outdoor_balcony":           coef_val("has_outdoor"),
+        "outdoor_courtyard_garden":  round(coef_val("has_outdoor") + coef_val("outdoor_courtyard"), 1),
+        # Internal laundry / furnished: not regressed yet (needs v2 data)
+        "internal_laundry":          None,
+        "furnished":                 None,
     }
 
     return weights, sig
@@ -177,19 +223,19 @@ def main():
     )
     print(f"|{'-'*30}|{'-'*18}|{'-'*6}|{'-'*24}|{'-'*10}|")
 
-    attr_keys = [
-        "parking_street", "parking_undercover", "parking_garage",
-        "aircon_none", "aircon_one_room", "aircon_whole",
-        "floor_1_3", "floor_4plus",
-        "outdoor_small_balcony", "outdoor_large_balcony", "outdoor_courtyard",
-        "pets_yes",
-    ]
+    attr_keys = list(CURRENT_WEIGHTS.keys())
 
     for key in attr_keys:
-        est = weights.get(key, 0)
+        est = weights.get(key)
         cur = CURRENT_WEIGHTS.get(key, 0)
+        sig = sig_fn(key) if est is not None else ""
+        if est is None:
+            print(
+                f"| {key:<28} | {'n/a (unwired)':>16} | {sig:>4} | "
+                f"{cur:>+21} | {'—':>8} |"
+            )
+            continue
         diff = round(est - cur, 1)
-        sig = sig_fn(key)
         print(
             f"| {key:<28} | {est:>+15.1f} | {sig:>4} | "
             f"{cur:>+21} | {diff:>+8.1f} |"

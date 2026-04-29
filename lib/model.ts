@@ -1,6 +1,9 @@
 import { SUBURBS } from './suburbs';
 
-// Attribute weights: real data (Apr 2026, n=30) + literature priors where noted
+// Attribute weights ($/week) — calibrated against Apr 2026 Domain listing data
+// (n=486 across 24 inner Melbourne suburbs). Some weights still rely on
+// literature priors where attribute-level data was thin; these will be
+// regressed end-to-end once the listing-detail collection completes.
 export const ATTRIBUTE_WEIGHTS = {
   parking_street: 5,
   parking_undercover: 40,

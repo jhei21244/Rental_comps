@@ -292,8 +292,8 @@ export default function SuburbsPage() {
                     {suburb.n.toLocaleString()}
                   </td>
                   <td style={{ padding: '13px 14px' }}>
-                    <a
-                      href="/#form"
+                    <Link
+                      href="/contribute"
                       style={{
                         fontSize: 12,
                         color: 'var(--terra)',
@@ -302,7 +302,7 @@ export default function SuburbsPage() {
                       }}
                     >
                       Contribute
-                    </a>
+                    </Link>
                   </td>
                 </tr>
               ))}

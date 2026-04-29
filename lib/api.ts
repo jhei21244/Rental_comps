@@ -110,3 +110,85 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function isValidEmail(email: unknown): email is string {
   return typeof email === 'string' && email.length <= 254 && EMAIL_RE.test(email);
 }
+
+const OUTCOME_TYPES = ['new_lease', 'renewal', 'declined_renewal'] as const;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export interface ValidatedOutcome {
+  submissionId: string | null;
+  suburb: string | null;
+  outcomeType: (typeof OUTCOME_TYPES)[number];
+  renewalIncreasePw: number | null;
+  negotiated: boolean;
+  negotiationSuccess: boolean | null;
+  finalRentPw: number;
+}
+
+export type OutcomeValidationResult =
+  | { ok: true; value: ValidatedOutcome }
+  | { ok: false; error: string };
+
+export function validateOutcome(input: unknown): OutcomeValidationResult {
+  if (!input || typeof input !== 'object') {
+    return { ok: false, error: 'Invalid payload' };
+  }
+  const i = input as Record<string, unknown>;
+
+  if (!inEnum(OUTCOME_TYPES, i.outcomeType)) {
+    return { ok: false, error: 'Invalid outcomeType' };
+  }
+
+  const finalRentPw = Number(i.finalRentPw);
+  if (!Number.isFinite(finalRentPw) || finalRentPw < 80 || finalRentPw > 5000) {
+    return { ok: false, error: 'finalRentPw must be between 80 and 5000' };
+  }
+
+  if (typeof i.negotiated !== 'boolean') {
+    return { ok: false, error: 'Invalid negotiated' };
+  }
+
+  let negotiationSuccess: boolean | null = null;
+  if (i.negotiated) {
+    if (typeof i.negotiationSuccess !== 'boolean') {
+      return { ok: false, error: 'Invalid negotiationSuccess' };
+    }
+    negotiationSuccess = i.negotiationSuccess;
+  }
+
+  let renewalIncreasePw: number | null = null;
+  if (i.outcomeType === 'renewal' && i.renewalIncreasePw !== null && i.renewalIncreasePw !== undefined) {
+    const n = Number(i.renewalIncreasePw);
+    if (!Number.isFinite(n) || n < 0 || n > 2000) {
+      return { ok: false, error: 'renewalIncreasePw must be between 0 and 2000' };
+    }
+    renewalIncreasePw = Math.round(n);
+  }
+
+  let suburb: string | null = null;
+  if (typeof i.suburb === 'string' && i.suburb.length > 0) {
+    const match = SUBURB_NAMES.find((n) => n.toLowerCase() === (i.suburb as string).toLowerCase());
+    if (!match) return { ok: false, error: 'Unknown suburb' };
+    suburb = match;
+  }
+
+  let submissionId: string | null = null;
+  if (typeof i.submissionId === 'string' && i.submissionId.length > 0) {
+    if (!UUID_RE.test(i.submissionId)) {
+      return { ok: false, error: 'Invalid submissionId' };
+    }
+    submissionId = i.submissionId;
+  }
+
+  return {
+    ok: true,
+    value: {
+      submissionId,
+      suburb,
+      outcomeType: i.outcomeType,
+      renewalIncreasePw,
+      negotiated: i.negotiated,
+      negotiationSuccess,
+      finalRentPw: Math.round(finalRentPw),
+    },
+  };
+}
