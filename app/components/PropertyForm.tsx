@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { SUBURB_NAMES } from '@/lib/suburbs';
 import { calculateRent, type PropertyInput, type ModelResult } from '@/lib/model';
+import SuburbCompare from './SuburbCompare';
 
 type FormState = {
   propertyType: string;
@@ -46,9 +47,7 @@ export default function PropertyForm() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [form, setForm] = useState<FormState>(defaultForm);
   const [result, setResult] = useState<ModelResult | null>(null);
-  const [email, setEmail] = useState('');
-  const [emailSubmitted, setEmailSubmitted] = useState(false);
-  const [emailError, setEmailError] = useState('');
+  const [submittedInput, setSubmittedInput] = useState<PropertyInput | null>(null);
   const [error, setError] = useState('');
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -127,8 +126,7 @@ export default function PropertyForm() {
     try {
       const r = calculateRent(input);
       setResult(r);
-      setEmailSubmitted(false);
-      setEmailError('');
+      setSubmittedInput(input);
       void fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -141,22 +139,16 @@ export default function PropertyForm() {
     }
   }
 
-  async function handleEmailSubmit() {
-    if (!email) return;
-    setEmailError('');
+  function handleSuburbSwap(name: string) {
+    if (!submittedInput) return;
+    const next: PropertyInput = { ...submittedInput, suburb: name };
     try {
-      const res = await fetch('/api/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, suburb: result?.suburb }),
-      });
-      if (res.ok) {
-        setEmailSubmitted(true);
-      } else {
-        setEmailError('Something went wrong. Please try again.');
-      }
+      const r = calculateRent(next);
+      setSubmittedInput(next);
+      setResult(r);
+      setSuburbInput(name);
     } catch {
-      setEmailError('Something went wrong. Please try again.');
+      // Unknown suburb — should never happen because we iterate SUBURBS
     }
   }
 
@@ -720,80 +712,8 @@ export default function PropertyForm() {
             — based on {result.records.toLocaleString()} comparable properties in {result.suburb}
           </div>
 
-          {/* Email capture */}
-          {!emailSubmitted ? (
-            <div
-              style={{
-                background: 'var(--terrapale)',
-                border: '1px solid var(--terraborder)',
-                borderRadius: 10,
-                padding: 16,
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--bark)', marginBottom: 4 }}>
-                Stay informed about {result.suburb}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 14, lineHeight: 1.6 }}>
-                We&apos;ll notify you when {result.suburb}&apos;s model improves and send a follow-up about your
-                renewal.
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  style={{
-                    flex: 1,
-                    background: 'white',
-                    border: '1px solid var(--cream3)',
-                    borderRadius: 8,
-                    padding: '10px 14px',
-                    fontSize: 13,
-                    color: 'var(--text)',
-                    outline: 'none',
-                  }}
-                />
-                <button
-                  onClick={handleEmailSubmit}
-                  type="button"
-                  style={{
-                    background: 'var(--bark)',
-                    color: 'white',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    padding: '10px 16px',
-                    borderRadius: 8,
-                    border: 'none',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  Notify me
-                </button>
-              </div>
-              {emailError && (
-                <div style={{ fontSize: 12, color: '#b92c2c', marginTop: 8 }}>{emailError}</div>
-              )}
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>
-                No marketing. No spam. Unsubscribe anytime.
-              </div>
-            </div>
-          ) : (
-            <div
-              className="animate-rise"
-              style={{
-                background: 'var(--sagepale)',
-                border: '1px solid rgba(61,107,79,0.25)',
-                borderRadius: 10,
-                padding: 16,
-                fontSize: 13,
-                color: 'var(--sage)',
-                fontWeight: 700,
-              }}
-            >
-              You&apos;re on the list. We&apos;ll be in touch when {result.suburb}&apos;s model updates.
-            </div>
+          {submittedInput && (
+            <SuburbCompare input={submittedInput} onSelect={handleSuburbSwap} />
           )}
         </div>
       )}
